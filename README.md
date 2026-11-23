@@ -95,7 +95,6 @@ GORR reads Tenable data through the Tenable One MCP connected to your Claude env
 
 For one 30-day cycle at a mid-size customer, GORR saves about 70 analyst hours (roughly 9 working days), about 90% of the effort the same plan and follow-up would take by hand.
 The figures are bottom-up estimates of the manual work GORR replaces, not measured benchmarks. Treat them as a model to check against a real customer.
-<img width="468" height="109" alt="image" src="https://github.com/user-attachments/assets/e9281d72-f606-435f-9014-22f89c570a2c" />
 
 More details please refer to the documentation below:
 
