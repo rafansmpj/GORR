@@ -91,6 +91,9 @@ GORR reads Tenable data through the Tenable One MCP connected to your Claude env
 - **No ticketing integration.** GORR never creates or updates tickets; ticket data lives only in the tracker files.
 - **Demo mode.** Without a working Tenable One MCP, the dashboard uses illustrative data with a "DEMO" watermark.
 
+## ROI and effort savings
+
+
 ## Repository layout
 
 ```
@@ -105,11 +108,6 @@ GORR/
 ├── scripts/                  tracker.py, bump_version.py
 └── gorr.skill                packaged skill for Claude Desktop
 ```
-
-## Versioning
-
-Run `python scripts/bump_version.py <major|minor|patch> "summary"` to bump `VERSION`, `SKILL.md`, `listing.yaml` and the CHANGELOG together, then rebuild `gorr.skill`.
-
 ## License
 
 MIT — see [LICENSE](LICENSE).
