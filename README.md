@@ -103,8 +103,7 @@ GORR/
 ├── listing.yaml
 ├── references/               tracker schema, carry-over, MCP collection, plugin ID resolution
 ├── scripts/                  tracker.py, bump_version.py
-├── gorr.skill                packaged skill for Claude Desktop
-└── skill-template.md         CyberAgents Exchange listing for GORR
+└── gorr.skill                packaged skill for Claude Desktop
 ```
 
 ## Versioning
