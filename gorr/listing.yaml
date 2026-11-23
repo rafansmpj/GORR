@@ -1,0 +1,36 @@
+name: "GORR"
+author: "rafael-tenable-channel-se"
+description: >
+  GORR (Game Over Risk Reduction) — generates an interactive executive dashboard showing which vulnerabilities to remediate
+  to cut the Tenable One Exposure Score across N cumulative phases (2–6, default 4: 10%–40%) within a 30-day cycle.
+  Targets the official score from the Exposure View API (uploaded JSON or a fresh pull) and models how each module,
+  Identity Exposure IoEs included, moves the Global score. Quick Wins are ranked by score drop per effort with Crown Jewel
+  and attack path chokepoint bonuses, keyed on real Tenable plugin IDs. Ships a CSV/JSON ticket tracker (owner from each
+  asset's Tenable tag, ticket, assignee, status) re-imported on the next run to verify fixes, plus a carry-over view of
+  missed items with their impact on each phase target and a recovery plan. Delivers a gauge, phase cards, progression
+  chart, per-asset, per-plugin and per-owner views, peer benchmark and board summary. Read-only. English and Portuguese.
+version: "1.2.1"
+license: "MIT"
+type: "skill"
+tier: "unreviewed"
+tags:
+  - "tenable-one"
+  - "exposure-management"
+  - "executive-dashboard"
+  - "quick-wins"
+  - "remediation-roadmap"
+  - "remediation-tracking"
+  - "carry-over"
+  - "identity-exposure"
+  - "exposure-view"
+  - "asset-ownership"
+  - "c-level"
+  - "ciso"
+  - "vulnerability-prioritization"
+  - "exposure-score"
+  - "claude-code"
+framework: "Claude Code SKILL"
+integrations:
+  - "Tenable"
+  - "Anthropic"
+date_added: 2026-06-22
