@@ -1,22 +1,22 @@
 # GORR (Game Over Risk Reduction) - Claude Desktop Skill
 
-A Claude Desktop skill that works with the Tenable Hexa AI MCP to build a 30-day plan for cutting the Tenable One Exposure Score in cumulative phases of Quick Wins, plus a ticket tracker that proves what was actually fixed.
+A Claude Desktop skill that works with the Tenable Hexa AI MCP to build a 30-day plan for cutting the Tenable One Exposure Score in cumulative phases of Quick Wins, plus a ticket tracker that proves what actually closed.
 
 **Version 1.2.1** · tracker schema `gorr-tracker/1.2` · see [CHANGELOG](CHANGELOG.md)
 
 ## What it does
 
-GORR builds an interactive executive dashboard that shows which vulnerabilities to close, in which order and by which date, to reduce the Tenable One Exposure Score across **N cumulative phases inside a 30-day cycle**. You choose N (2–6) at the start of every run. The default is 4 phases: 10% → 20% → 30% → 40%.
+GORR builds an interactive executive dashboard that shows which vulnerabilities to close, in which order and by which date, to reduce the Tenable One Exposure Score across **N cumulative phases instead of a one-shot clean-up**.
 
-- **Official score.** It targets the official Exposure Score from the Tenable One Exposure View API: an uploaded `gorr_exposure_view_*.json` file, or a fresh pull with the bundled collector. The computed score is used as a cross-check.
+- **Official score.** It targets the official Exposure Score from the Tenable One Exposure View API: an uploaded `gorr_exposure_view_*.json` file, or a fresh pull with the bundled collector. The collector uses the API key pair only from environment variables; it never writes credentials to disk.
 - **Module levers.** It models how each module moves the Global score, Identity Exposure IoEs included, so the plan pulls the levers that actually carry the score.
-- **Quick Win ranking.** Actions are ranked by projected score drop per unit of effort, with Crown Jewel (+30%) and attack path chokepoint (+20%) bonuses. Every item is keyed on the real Tenable plugin ID, verified against the tenant.
+- **Quick Win ranking.** Actions are ranked by projected score drop per unit of effort, with Crown Jewel (+30%) and attack path chokepoint (+20%) bonuses. Every item is keyed on the real Tenable product, plugin and asset data.
 - **Owners from Tenable tags.** The owner of each asset is read from its Tenable tag on every run. Re-tag an asset in Tenable and its items move to the new owner.
-- **Ticket tracker.** It writes `gorr_tracker.csv` / `gorr_tracker.json` (one row per plugin × asset) for owner, assignee, ticket number and status. Upload the tracker on the next run and GORR re-checks every item in Tenable: fixed (verified), still open, reopened, new, overdue, or "claimed resolved but still detected".
+- **Ticket tracker.** It writes `gorr_tracker.csv` / `gorr_tracker.json` (one row per plugin × asset) for owner, assignee, ticket number and status. Upload the tracker on the next run and GORR re-verifies every item in Tenable.
 - **Carry-over.** Items from past-due phases that are not fixed or not closed are flagged, with their impact on each phase target and a recovery plan (phase, due date, mitigation, escalation L1–L3).
 - **Read-only.** GORR never creates tickets or changes anything in Tenable.
 
-The dashboard (English or Portuguese) includes a run-cycle banner, score gauge, clickable phase cards (By vulnerability, By asset, Tickets, Carry-over), progression chart (planned vs. actual), peer benchmark, board-ready executive summary, and a Method & data limits section that labels every proxy.
+The dashboard (English or Portuguese) includes a run-cycle banner, score gauge, clickable phase cards (By vulnerability, By asset, Tickets, Carry-over), progression chart (planned vs. actual), peer benchmark, and a 30-day ticket tracker.
 
 Audience: C-Level, Board, CISO, VP of IT, remediation teams, MSSP partners and Channel SEs.
 
@@ -25,9 +25,9 @@ Audience: C-Level, Board, CISO, VP of IT, remediation teams, MSSP partners and C
 ### 1. Prerequisites
 
 - Claude Desktop (or Claude Code, or another Claude environment with skills support).
-- A Tenable One MCP server (Tenable Hexa AI MCP) connected and authenticated. It provides findings, assets, tags, Crown Jewels and attack path data. Without it, the skill falls back to a "DEMO — illustrative data" dashboard so the workflow can still be shown end to end.
+- A Tenable One MCP server (Tenable Hexa AI MCP) connected and authenticated. It provides findings, assets, tags, Crown Jewels and attack path data. Without it, the skill falls back to a "DEMO — illustrative data" mock dashboard.
 - The MCP connection needs read access to findings/vulnerabilities (VPR, severity, affected assets), assets and tags, Crown Jewels and attack paths.
-- Optional, for the official Exposure Score: a Tenable API key pair with the Basic role or `EXPOSURE_MANAGEMENT.ANALYTICS.EXPOSURE_VIEW.READ`, used only by the collector script on your own machine. The keys never go through the chat.
+- Optional, for the official Exposure Score: a Tenable API key pair with the Basic role or `EXPOSURE_MANAGEMENT.ANALYTICS.EXPOSURE_VIEW.READ`, used only by the collector script on your own machine, never by the skill or MCP.
 
 ### 2. Installation
 
@@ -42,13 +42,13 @@ git clone https://github.com/rafansmpj/GORR.git ~/.claude/skills/gorr
 
   For a single project, clone it into `.claude/skills/gorr` inside that project instead. Invoke it with `/gorr` or by asking for GORR / quick wins.
 
-The repository root is the skill: `SKILL.md`, `references/` (tracker schema, carry-over, MCP collection, plugin ID resolution), `scripts/tracker.py` (deterministic tracker merge) and `scripts/bump_version.py`. No build step: Python 3 is only needed for the tracker and collector scripts.
+The repository root is the skill: `SKILL.md`, `references/` (tracker schema, carry-over, MCP collection, plugin ID resolution), `scripts/tracker.py` (deterministic tracker merge) and `scripts/bump_version.py` (weekly version bump).
 
 ### 3. Configure
 
 - Make sure the Tenable One MCP connector is active in the same Claude environment.
 - **Owner tag category:** tag your assets with an owner category in Tenable (e.g. `Owner:Infra SP`, `Business Unit:Finance`). GORR auto-detects it by name, or tell it "owner is tag X".
-- **Exposure View file (optional):** on the first run, choose "Generate a new file" and GORR gives you `gorr_exposure_view_pull.py`. Run it locally with your API keys from environment variables or a local keys file, then upload the `gorr_exposure_view_YYYYMMDD_HHMMSS.json` it writes.
+- **Exposure View file (optional):** on the first run, choose "Generate a new file" and GORR gives you `gorr_exposure_view_pull.py`. Run it locally with your API keys from environment variables or a `.env` file; GORR does not ask you to paste API keys into chat.
 - Optional context: industry (for the benchmark), language (EN/PT), and filters such as Crown Jewels only, one domain (Cloud / Identity / OT), or regulatory mapping (LGPD, ISO 27001, NIST CSF, PCI-DSS).
 
 ## Usage
@@ -79,13 +79,13 @@ Every run starts with two questions: which Exposure View file to use (uploaded, 
 
 ## Data flows
 
-GORR reads Tenable data through the Tenable One MCP connected to your Claude environment. The optional collector script calls only the Tenable One Exposure View API (`cloud.tenable.com`) from your own machine, with keys from your environment or a local keys file. Nothing is written back to Tenable, and no other outbound calls are made.
+GORR reads Tenable data through the Tenable One MCP connected to your Claude environment. The optional collector script calls only the Tenable One Exposure View API (`cloud.tenable.com`) from your own machine. No API keys are stored in the skill package or sent to the MCP.
 
 ## Known limitations
 
-- **Computed score without the Exposure View file.** If no Exposure View JSON is provided, the score is GORR's reconstruction of Tenable's model, labelled as a proxy in the dashboard. Projected drops per phase are estimates, not Tenable's own numbers.
+- **Computed score without the Exposure View file.** If no Exposure View JSON is provided, the score is GORR's reconstruction of Tenable's model, labelled as a proxy in the dashboard. Projected drops are estimates, not official projections.
 - **MCP query limits.** Large tenants may not return every finding; the dashboard's Method & data limits section states the coverage actually retrieved (e.g. "400 of 552 VPR ≥ 9 findings").
-- **Optional inputs.** The peer benchmark needs the Exposure View file; Crown Jewel and chokepoint bonuses need those features populated in Tenable One. When missing, GORR shows "n/a" or uses a labelled proxy (e.g. ACR ≥ 9 for Crown Jewels).
+- **Optional inputs.** The peer benchmark needs the Exposure View file; Crown Jewel and chokepoint bonuses need those features populated in Tenable One. When missing, GORR shows "n/a" or uses a lower-confidence bonus.
 - **Verification depends on re-scans.** A fix is only confirmed once Tenable re-scans the asset; until then the item shows as "not re-scanned".
 - **Owner tags.** Assets without an owner tag fall back to the tracker's `owner` column and are listed as untagged.
 - **No ticketing integration.** GORR never creates or updates tickets; ticket data lives only in the tracker files.
@@ -93,6 +93,7 @@ GORR reads Tenable data through the Tenable One MCP connected to your Claude env
 
 ## ROI and effort savings
 
+[Download GORR_ROI_and_effort_savings.pdf](https://raw.githubusercontent.com/rafansmpj/GORR/main/GORR_ROI_and_effort_savings.pdf)
 
 ## Repository layout
 
