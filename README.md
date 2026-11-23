@@ -2,7 +2,7 @@
 
 A Claude Desktop skill that works with the Tenable Hexa AI MCP to build a 30-day plan for cutting the Tenable One Exposure Score in cumulative phases of Quick Wins, plus a ticket tracker that proves what was actually fixed.
 
-**Version 1.2.1** · tracker schema `gorr-tracker/1.2` · see [CHANGELOG](gorr/CHANGELOG.md)
+**Version 1.2.1** · tracker schema `gorr-tracker/1.2` · see [CHANGELOG](CHANGELOG.md)
 
 ## What it does
 
@@ -20,10 +20,6 @@ The dashboard (English or Portuguese) includes a run-cycle banner, score gauge, 
 
 Audience: C-Level, Board, CISO, VP of IT, remediation teams, MSSP partners and Channel SEs.
 
-SAMPLE:
-
-<!-- Add a dashboard screenshot here (drag an image into the GitHub editor) -->
-
 ## Quick Start (5 minutes)
 
 ### 1. Prerequisites
@@ -37,14 +33,16 @@ SAMPLE:
 
 Pick one:
 
-- **Packaged skill:** download [`gorr.skill`](gorr.skill) and add it as a skill in Claude Desktop.
-- **Folder:** copy the [`gorr/`](gorr) folder into your local skills directory:
+- **Claude Desktop:** download [`gorr.skill`](gorr.skill), then upload it in Claude Desktop's Skills settings.
+- **Claude Code:** clone this repository into your skills directory. The skill is available in every project:
 
 ```
-~/.claude/skills/gorr/
+git clone https://github.com/rafansmpj/GORR.git ~/.claude/skills/gorr
 ```
 
-The folder holds `SKILL.md`, `references/` (tracker schema, carry-over, MCP collection, plugin ID resolution), `scripts/tracker.py` (deterministic tracker merge) and `scripts/bump_version.py`. No build step: Python 3 is only needed for the tracker and collector scripts.
+  For a single project, clone it into `.claude/skills/gorr` inside that project instead. Invoke it with `/gorr` or by asking for GORR / quick wins.
+
+The repository root is the skill: `SKILL.md`, `references/` (tracker schema, carry-over, MCP collection, plugin ID resolution), `scripts/tracker.py` (deterministic tracker merge) and `scripts/bump_version.py`. No build step: Python 3 is only needed for the tracker and collector scripts.
 
 ### 3. Configure
 
@@ -72,29 +70,46 @@ Every run starts with two questions: which Exposure View file to use (uploaded, 
 3. **Tracking runs:** upload `gorr_tracker.json` (keeps the full score history) or `.csv`. GORR verifies each item in Tenable and flags carry-over after each due date.
 4. **Next cycle:** on the `next_run_date`, GORR closes the cycle and plans the next one with carried-over items.
 
+## Outputs
+
+- `gorr_quick_wins_<YYYYMMDD>.html` — standalone interactive dashboard (English or Portuguese).
+- `gorr_tracker.csv` / `gorr_tracker.json` — remediation tracker, one row per plugin × asset, re-imported on the next run.
+- `gorr_exposure_view_pull.py` (only when you ask for a fresh pull) — local collector that writes `gorr_exposure_view_YYYYMMDD_HHMMSS.json`.
+- An `.ics` reminder for the next run date.
+
+## Data flows
+
+GORR reads Tenable data through the Tenable One MCP connected to your Claude environment. The optional collector script calls only the Tenable One Exposure View API (`cloud.tenable.com`) from your own machine, with keys from your environment or a local keys file. Nothing is written back to Tenable, and no other outbound calls are made.
+
+## Known limitations
+
+- **Computed score without the Exposure View file.** If no Exposure View JSON is provided, the score is GORR's reconstruction of Tenable's model, labelled as a proxy in the dashboard. Projected drops per phase are estimates, not Tenable's own numbers.
+- **MCP query limits.** Large tenants may not return every finding; the dashboard's Method & data limits section states the coverage actually retrieved (e.g. "400 of 552 VPR ≥ 9 findings").
+- **Optional inputs.** The peer benchmark needs the Exposure View file; Crown Jewel and chokepoint bonuses need those features populated in Tenable One. When missing, GORR shows "n/a" or uses a labelled proxy (e.g. ACR ≥ 9 for Crown Jewels).
+- **Verification depends on re-scans.** A fix is only confirmed once Tenable re-scans the asset; until then the item shows as "not re-scanned".
+- **Owner tags.** Assets without an owner tag fall back to the tracker's `owner` column and are listed as untagged.
+- **No ticketing integration.** GORR never creates or updates tickets; ticket data lives only in the tracker files.
+- **Demo mode.** Without a working Tenable One MCP, the dashboard uses illustrative data with a "DEMO" watermark.
+
 ## Repository layout
 
 ```
 GORR/
 ├── README.md                 this file
 ├── LICENSE                   MIT
-├── gorr.skill                packaged skill, ready to install
-├── gorr/                     skill source
-│   ├── SKILL.md
-│   ├── README.md
-│   ├── CHANGELOG.md
-│   ├── VERSION
-│   ├── listing.yaml
-│   ├── references/
-│   └── scripts/
-├── skill-template.md         CyberAgents Exchange listing for GORR
-├── playbook-template.md      Exchange template (playbooks)
-└── mcp-server-template.md    Exchange template (MCP servers)
+├── SKILL.md                  skill instructions
+├── CHANGELOG.md
+├── VERSION
+├── listing.yaml
+├── references/               tracker schema, carry-over, MCP collection, plugin ID resolution
+├── scripts/                  tracker.py, bump_version.py
+├── gorr.skill                packaged skill for Claude Desktop
+└── skill-template.md         CyberAgents Exchange listing for GORR
 ```
 
 ## Versioning
 
-Run `python gorr/scripts/bump_version.py <major|minor|patch> "summary"` to bump `VERSION`, `SKILL.md`, `listing.yaml` and the CHANGELOG together, then rebuild `gorr.skill`.
+Run `python scripts/bump_version.py <major|minor|patch> "summary"` to bump `VERSION`, `SKILL.md`, `listing.yaml` and the CHANGELOG together, then rebuild `gorr.skill`.
 
 ## License
 
